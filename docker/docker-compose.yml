@@ -1,0 +1,35 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: tg_bot_nginx
+    restart: unless-stopped
+    ports:
+      - 12221:80
+    volumes:
+      - './config/nginx/:/etc/nginx/conf.d/'
+      - '..:/var/www/'
+    depends_on:
+      - app
+
+  app:
+    build: 
+        context: .
+        dockerfile: Dockerfile
+    container_name: tg_bot_php
+    working_dir: /var/www/
+    volumes:
+      - '../:/var/www'
+    depends_on:
+      - pgsql_tg_bot
+  
+  pgsql_tg_bot:
+    image: postgres:14.2
+    container_name: tg_bot_db
+    volumes:
+      - './config/postgresql:/docker-entrypoint-initdb.d'
+    environment:
+      POSTGRES_USER: tg_bot_user
+      POSTGRES_PASSWORD: tg_bot_password
+      POSTGRES_MULTIPLE_DATABASES: tg_bot_pgsql_db
+    ports:
+      - 12222:5432
